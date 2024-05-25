@@ -35,7 +35,7 @@ def login_user(username, password):
     return data
 
 # 賃貸物件データベースの設定
-RENT_DB_PATH = '/mnt/data/room.db'
+RENT_DB_PATH = 'DB/room.db'
 RENT_DB_TABLE_NAME = 'room_ver2'
 
 # データベースを初期化する関数
