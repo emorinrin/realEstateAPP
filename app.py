@@ -11,10 +11,14 @@ from streamlit_folium import folium_static
 DB_PATH = st.secrets["STEP3-1_bady"]["DB"]
 DB_TABLE_NAME = 'room_ver2'  # テーブル名
 
+# デバッグのためにパスを表示
+st.write(f"Database Path: {DB_PATH}")
+
 # データベースを初期化する関数
 def initialize_db(db_path):
     try:
         if not os.path.exists(db_path):
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
             conn = sqlite3.connect(db_path)
             conn.execute('''
                 CREATE TABLE IF NOT EXISTS room_ver2 (
