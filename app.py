@@ -65,9 +65,14 @@ def load_data_from_db():
 
 # データフレームの前処理を行う関数
 def preprocess_dataframe(df):
+    # データフレームの列名を表示
+    st.write("データフレームの列名: ", df.columns.tolist())
     # '家賃' 列を浮動小数点数に変換し、NaN値を取り除く
-    df['家賃'] = pd.to_numeric(df['家賃'], errors='coerce')
-    df = df.dropna(subset=['家賃'])
+    if '家賃' in df.columns:
+        df['家賃'] = pd.to_numeric(df['家賃'], errors='coerce')
+        df = df.dropna(subset=['家賃'])
+    else:
+        st.error("家賃の列がデータフレームに存在しません。")
     return df
 
 def make_clickable(url, name):
@@ -117,7 +122,7 @@ def main():
     st.write(df.head())
 
     # 家賃が数値であることを確認
-    if df['家賃'].isnull().all():
+    if '家賃' not in df.columns or df['家賃'].isnull().all():
         st.error("家賃の値が正しく取得できていません。データベースの内容を確認してください。")
         return
 
