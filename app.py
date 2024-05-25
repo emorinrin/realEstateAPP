@@ -131,4 +131,54 @@ def main():
 
     # フィルタリング/ フィルタリングされたデータフレームの件数を取得
     filtered_df = df[(df['区'].isin([area])) & (df['間取り'].isin(type_options))]
-    filtered_df = filtered_df[(df['家賃'] >= price_min) & (df['家賃'] <= 
+    filtered_df = filtered_df[(filtered_df['家賃'] >= price_min) & (filtered_df['家賃'] <= price_max)]  # ここで括弧を閉じます
+    filtered_count = len(filtered_df)
+
+    # '緯度' と '経度' 列を数値型に変換し、NaN値を含む行を削除
+    filtered_df['緯度'] = pd.to_numeric(filtered_df['緯度'], errors='coerce')
+    filtered_df['経度'] = pd.to_numeric(filtered_df['経度'], errors='coerce')
+    filtered_df2 = filtered_df.dropna(subset=['緯度', '経度'])
+
+    # 検索ボタン / # フィルタリングされたデータフレームの件数を表示
+    col2_1, col2_2 = st.columns([1, 2])
+
+    with col2_2:
+        st.write(f"物件検索数: {filtered_count}件 / 全{len(df)}件")
+
+    # 検索ボタン
+    if col2_1.button('検索＆更新', key='search_button'):
+        # 検索ボタンが押された場合、セッションステートに結果を保存
+        st.session_state['filtered_df'] = filtered_df
+        st.session_state['filtered_df2'] = filtered_df2
+        st.session_state['search_clicked'] = True
+
+    # Streamlitに地図を表示
+    if st.session_state.get('search_clicked', False):
+        m = create_map(st.session_state.get('filtered_df2', filtered_df2))
+        folium_static(m)
+
+    # 地図の下にラジオボタンを配置し、選択したオプションに応じて表示を切り替える
+    show_all_option = st.radio(
+        "表示オプションを選択してください:",
+        ('地図上の検索物件のみ', 'すべての検索物件'),
+        index=0 if not st.session_state.get('show_all', False) else 1,
+        key='show_all_option'
+    )
+
+    # ラジオボタンの選択に応じてセッションステートを更新
+    st.session_state['show_all'] = (show_all_option == 'すべての検索物件')
+
+    # 検索結果の表示
+    if st.session_state.get('search_clicked', False):
+        if st.session_state['show_all']:
+            display_search_results(st.session_state.get('filtered_df', filtered_df))  # 全データ
+        else:
+            display_search_results(st.session_state.get('filtered_df2', filtered_df2))  # 地図上の物件のみ
+
+# アプリケーションの実行
+if __name__ == "__main__":
+    if 'search_clicked' not in st.session_state:
+        st.session_state['search_clicked'] = False
+    if 'show_all' not in st.session_state:
+        st.session_state['show_all'] = False
+    main()
