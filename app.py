@@ -169,4 +169,33 @@ def main():
         st.session_state['filtered_df2'] = filtered_df2
         st.session_state['search_clicked'] = True
 
-    #
+    # Streamlitに地図を表示
+    if st.session_state.get('search_clicked', False):
+        m = create_map(st.session_state.get('filtered_df2', filtered_df2))
+        folium_static(m)
+
+    # 地図の下にラジオボタンを配置し、選択したオプションに応じて表示を切り替える
+    show_all_option = st.radio(
+        "表示オプションを選択してください:",
+        ('地図上の検索物件のみ', 'すべての検索物件'),
+        index=0 if not st.session_state.get('show_all', False) else 1,
+        key='show_all_option'
+    )
+
+    # ラジオボタンの選択に応じてセッションステートを更新
+    st.session_state['show_all'] = (show_all_option == 'すべての検索物件')
+
+    # 検索結果の表示
+    if st.session_state.get('search_clicked', False):
+        if st.session_state['show_all']:
+            display_search_results(st.session_state.get('filtered_df', filtered_df))  # 全データ
+        else:
+            display_search_results(st.session_state.get('filtered_df2', filtered_df2))  # 地図上の物件のみ
+
+# アプリケーションの実行
+if __name__ == "__main__":
+    if 'search_clicked' not in st.session_state:
+        st.session_state['search_clicked'] = False
+    if 'show_all' not in st.session_state:
+        st.session_state['show_all'] = False
+    main()
