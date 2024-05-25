@@ -13,23 +13,28 @@ DB_TABLE_NAME = 'room_ver2'  # テーブル名
 
 # データベースを初期化する関数
 def initialize_db(db_path):
-    if not os.path.exists(db_path):
-        conn = sqlite3.connect(db_path)
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS room_ver2 (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                名称 TEXT,
-                アドレス TEXT,
-                階数 TEXT,
-                家賃 REAL,
-                間取り TEXT,
-                物件詳細URL TEXT,
-                緯度 REAL,
-                経度 REAL,
-                区 TEXT
-            )
-        ''')
-        conn.close()
+    try:
+        if not os.path.exists(db_path):
+            conn = sqlite3.connect(db_path)
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS room_ver2 (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    名称 TEXT,
+                    アドレス TEXT,
+                    階数 TEXT,
+                    家賃 REAL,
+                    間取り TEXT,
+                    物件詳細URL TEXT,
+                    緯度 REAL,
+                    経度 REAL,
+                    区 TEXT
+                )
+            ''')
+            conn.close()
+    except sqlite3.OperationalError as e:
+        st.error(f"SQLite OperationalError: {e}")
+    except Exception as e:
+        st.error(f"Error initializing database: {e}")
 
 # データベースを初期化
 initialize_db(DB_PATH)
@@ -68,7 +73,7 @@ def make_clickable(url, name):
 def create_map(filtered_df):
     # 地図の初期設定
     map_center = [filtered_df['緯度'].mean(), filtered_df['経度'].mean()]
-    m = folium.Map(location=map_center, zoom_start=12)  # ここで括弧を閉じます
+    m = folium.Map(location=map_center, zoom_start=12)
 
     # マーカーを追加
     for idx, row in filtered_df.iterrows():
@@ -131,7 +136,7 @@ def main():
 
     # フィルタリング/ フィルタリングされたデータフレームの件数を取得
     filtered_df = df[(df['区'].isin([area])) & (df['間取り'].isin(type_options))]
-    filtered_df = filtered_df[(filtered_df['家賃'] >= price_min) & (filtered_df['家賃'] <= price_max)]  # ここで括弧を閉じます
+    filtered_df = filtered_df[(filtered_df['家賃'] >= price_min) & (filtered_df['家賃'] <= price_max)]
     filtered_count = len(filtered_df)
 
     # '緯度' と '経度' 列を数値型に変換し、NaN値を含む行を削除
