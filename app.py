@@ -89,6 +89,7 @@ def load_data_from_db(db_path):
 # データフレームの前処理を行う関数
 def preprocess_dataframe(df):
     st.write("データフレームの列名: ", df.columns.tolist())
+    st.write("データフレームの内容: ", df.head())
     if '家賃' in df.columns:
         df['家賃'] = pd.to_numeric(df['家賃'], errors='coerce')
         df = df.dropna(subset=['家賃'])
