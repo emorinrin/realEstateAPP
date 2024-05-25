@@ -1,7 +1,6 @@
 streamlit
 pandas
 numpy
-sqlite3
 python-dotenv
 geopy
 folium
