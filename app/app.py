@@ -2,9 +2,7 @@ import os
 import streamlit as st
 import pandas as pd
 import numpy as np
-import gspread
-from google.oauth2.service_account import Credentials
-from gspread_dataframe import set_with_dataframe
+import sqlite3
 from dotenv import load_dotenv
 from geopy.geocoders import Nominatim
 import folium
@@ -13,10 +11,9 @@ from streamlit_folium import folium_static
 # 環境変数の読み込み
 load_dotenv()
 
-# 環境変数から認証情報を取得
-SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
-PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH")
-SP_SHEET     = 'tech0_01' # sheet名
+# データベースファイルのパスを環境変数から取得
+DB_PATH = os.getenv("DB_PATH")
+DB_TABLE_NAME = 'room_ver2'  # テーブル名
 
 # セッション状態の初期化
 if 'show_all' not in st.session_state:
@@ -26,32 +23,12 @@ if 'show_all' not in st.session_state:
 def toggle_show_all():
     st.session_state['show_all'] = not st.session_state['show_all']
 
-
-# スプレッドシートからデータを読み込む関数
-def load_data_from_spreadsheet():
-    # googleスプレッドシートの認証 jsonファイル読み込み(key値はGCPから取得)
-    SP_CREDENTIAL_FILE = PRIVATE_KEY_PATH
-
-    scopes = [
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive'
-    ]
-
-    credentials = Credentials.from_service_account_file(
-        SP_CREDENTIAL_FILE,
-        scopes=scopes
-    )
-    gc = gspread.authorize(credentials)
-
-    SP_SHEET_KEY = SPREADSHEET_ID # d/〇〇/edit の〇〇部分
-    sh  = gc.open_by_key(SP_SHEET_KEY)
-
-    # 不動産データの取得
-    worksheet = sh.worksheet(SP_SHEET) # シートのデータ取得
-    pre_data  = worksheet.get_all_values()
-    col_name = pre_data[0][:]
-    df = pd.DataFrame(pre_data[1:], columns=col_name) # 一段目をカラム、以下データフレームで取得
-
+# SQLiteデータベースからデータを読み込む関数
+def load_data_from_db():
+    conn = sqlite3.connect(DB_PATH)
+    query = f"SELECT * FROM {DB_TABLE_NAME}"
+    df = pd.read_sql(query, conn)
+    conn.close()
     return df
 
 # データフレームの前処理を行う関数
@@ -67,12 +44,12 @@ def make_clickable(url, name):
 # 地図を作成し、マーカーを追加する関数
 def create_map(filtered_df):
     # 地図の初期設定
-    map_center = [filtered_df['latitude'].mean(), filtered_df['longitude'].mean()]
+    map_center = [filtered_df['緯度'].mean(), filtered_df['経度'].mean()]
     m = folium.Map(location=map_center, zoom_start=12)
 
     # マーカーを追加
     for idx, row in filtered_df.iterrows():
-        if pd.notnull(row['latitude']) and pd.notnull(row['longitude']):
+        if pd.notnull(row['緯度']) and pd.notnull(row['経度']):
             # ポップアップに表示するHTMLコンテンツを作成
             popup_html = f"""
             <b>名称:</b> {row['名称']}<br>
@@ -84,7 +61,7 @@ def create_map(filtered_df):
             # HTMLをポップアップに設定
             popup = folium.Popup(popup_html, max_width=400)
             folium.Marker(
-                [row['latitude'], row['longitude']],
+                [row['緯度'], row['経度']],
                 popup=popup
             ).add_to(m)
 
@@ -101,7 +78,7 @@ def display_search_results(filtered_df):
 
 # メインのアプリケーション
 def main():
-    df = load_data_from_spreadsheet()
+    df = load_data_from_db()
     df = preprocess_dataframe(df)
 
     # StreamlitのUI要素（スライダー、ボタンなど）の各表示設定
@@ -114,12 +91,11 @@ def main():
         # エリア選択
         area = st.radio('■ エリア選択', df['区'].unique())
 
-
     with col2:
         # 家賃範囲選択のスライダーをfloat型で設定し、小数点第一位まで表示
         price_min, price_max = st.slider(
-            '■ 家賃範囲 (万円)', 
-            min_value=float(1), 
+            '■ 家賃範囲 (万円)',
+            min_value=float(1),
             max_value=float(df['家賃'].max()),
             value=(float(df['家賃'].min()), float(df['家賃'].max())),
             step=0.1,  # ステップサイズを0.1に設定
@@ -127,20 +103,18 @@ def main():
         )
 
     with col2:
-    # 間取り選択のデフォルト値をすべてに設定
+        # 間取り選択のデフォルト値をすべてに設定
         type_options = st.multiselect('■ 間取り選択', df['間取り'].unique(), default=df['間取り'].unique())
-
 
     # フィルタリング/ フィルタリングされたデータフレームの件数を取得
     filtered_df = df[(df['区'].isin([area])) & (df['間取り'].isin(type_options))]
     filtered_df = filtered_df[(filtered_df['家賃'] >= price_min) & (filtered_df['家賃'] <= price_max)]
     filtered_count = len(filtered_df)
 
-    # 'latitude' と 'longitude' 列を数値型に変換し、NaN値を含む行を削除
-    filtered_df['latitude'] = pd.to_numeric(filtered_df['latitude'], errors='coerce')
-    filtered_df['longitude'] = pd.to_numeric(filtered_df['longitude'], errors='coerce')
-    filtered_df2 = filtered_df.dropna(subset=['latitude', 'longitude'])
-
+    # '緯度' と '経度' 列を数値型に変換し、NaN値を含む行を削除
+    filtered_df['緯度'] = pd.to_numeric(filtered_df['緯度'], errors='coerce')
+    filtered_df['経度'] = pd.to_numeric(filtered_df['経度'], errors='coerce')
+    filtered_df2 = filtered_df.dropna(subset=['緯度', '経度'])
 
     # 検索ボタン / # フィルタリングされたデータフレームの件数を表示
     col2_1, col2_2 = st.columns([1, 2])
@@ -177,7 +151,6 @@ def main():
             display_search_results(st.session_state.get('filtered_df', filtered_df))  # 全データ
         else:
             display_search_results(st.session_state.get('filtered_df2', filtered_df2))  # 地図上の物件のみ
-
 
 # アプリケーションの実行
 if __name__ == "__main__":
