@@ -12,7 +12,7 @@ from streamlit_folium import folium_static
 load_dotenv()
 
 # データベースファイルのパスを環境変数から取得
-DB_PATH = os.getenv("DB_PATH")
+DB_PATH = os.getenv("STEP3-1_bady\DB\room.db")
 DB_TABLE_NAME = 'room_ver2'  # テーブル名
 
 # セッション状態の初期化
