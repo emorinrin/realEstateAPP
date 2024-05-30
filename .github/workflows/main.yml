@@ -29,13 +29,13 @@ jobs:
       - name: Run script
         run: |
           # 定期実行するファイルを指定
-          python scraping/scraping.py
+          python scraping/scraping_test.py
 
       - name: Commit and push changes
         run: |
           git config --global user.name 'Kishi Masahiro'
           git config --global user.email 'ksmshr1988@gmail.com'
-          git add DB/room.db
+          git add DB/room_test.db
           git commit -m 'Update database with latest scraped data'
           git push
         env:
