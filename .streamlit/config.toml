@@ -1,21 +1,6 @@
 [theme]
-base="dark"
-primaryColor="#D0B987"
-backgroundColor="#1F1D1C"
-textColor="#F3F3F3"
-font="sans serif"
-
-import streamlit as st
-
-st.set_page_config(
-    page_title="HomeSeekers",
-    page_icon="🏠",
-    layout="centered",
-    initial_sidebar_state="auto",
-    menu_items={
-        'Get Help': 'https://www.extremelycoolapp.com/help',
-        'Report a bug': "https://www.extremelycoolapp.com/bug",
-        'About': "# This is a header. This is an *extremely* cool app!"
-    }
-)
-
+base = "dark"
+primaryColor = "#D0B987"
+backgroundColor = "#1F1D1C"
+textColor = "#F3F3F3"
+font = "sans serif"
