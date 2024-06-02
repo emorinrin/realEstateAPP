@@ -128,8 +128,8 @@ def load_data_from_db(db_path):
 
 # データフレームの前処理を行う関数
 def preprocess_dataframe(df):
-    st.write("データフレームの列名: ", df.columns.tolist())
-    st.write("データフレームの内容: ", df.head())
+    # st.write("データフレームの列名: ", df.columns.tolist())
+    # st.write("データフレームの内容: ", df.head())
     if '家賃' in df.columns:
         df['家賃'] = pd.to_numeric(df['家賃'], errors='coerce')
         df = df.dropna(subset=['家賃'])
@@ -163,10 +163,17 @@ def display_search_results(filtered_df, username):
 
     # チェックボックスを追加
     for idx, row in filtered_df.iterrows():
-        st.write(f"家賃：{row['名称']}")
-        st.write(f"家賃：{row['アドレス']}")
+        st.header(f"{row['名称']}")
+        st.write(f"住所：{row['アドレス']}")
         st.write(f"家賃：{row['家賃']}万円、階数{row['階数']}、間取り：{row['間取り']}")
-        st.image(row['物件画像URL'])
+
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.image(row['物件画像URL'])
+
+        with col2:
+            st.image(row['間取画像URL'], width=200)
+
         st.markdown("詳細リンク(%s)" % row['物件詳細URL'])
         if st.checkbox(f"お気に入り登録する", key=f"{username}_{row['id']}"):
             add_bookmark(username, row)
@@ -175,7 +182,7 @@ def rental_app(username):
     df = load_data_from_db(RENT_DB_PATH)
     df = preprocess_dataframe(df)
 
-    st.title('賃貸物件情報の可視化')
+    st.title('賃貸物件検索')
 
     col1, col2 = st.columns([1, 2])
 
@@ -233,7 +240,7 @@ def rental_app(username):
             display_search_results(st.session_state.get('filtered_df2', filtered_df2), username)
 
 def main():
-    st.title("賃貸物件情報アプリ")
+    st.title("HomeSeekers -賃貸物件情報アプリ-")
 
     menu = ["ホーム", "ログイン", "サインアップ", "ブックマーク"]
     choice = st.sidebar.selectbox("メニュー", menu)
