@@ -9,7 +9,7 @@ from streamlit_folium import folium_static
 
 #CSS
 st.set_page_config(
-    page_title="HomeSeeker",
+    page_title="HomeSeekers",
     page_icon="🏠",
     layout="centered",
     initial_sidebar_state="auto",
@@ -249,17 +249,19 @@ def rental_app(username):
             display_search_results(st.session_state.get('filtered_df2', filtered_df2), username)
 
 def main():
-    st.title("HomeSeekers -賃貸検索アプリ-")
+    st.image("img/HomeSeekers.png")
 
-    menu = ["ホーム", "ログイン", "サインアップ", "ブックマーク"]
+    menu = ["🏠ホーム", "🚪ログイン", "🆕サインアップ", "📚ブックマーク"]
     choice = st.sidebar.selectbox("メニュー", menu)
 
-    if choice == "ホーム":
-        st.image("img/HomeSeekers.png")
-        st.subheader("ホーム画面です")
+    if choice == "🏠ホーム":
+        st.subheader("⬅️サイドバーからログインしてください")
+        st.text("ユーザー登録がまだの方はサインアップから登録してください")
 
-    elif choice == "ログイン":
-        st.subheader("ログイン画面です")
+    elif choice == "🚪ログイン":
+        st.subheader("👩‍💼ログインして物件を探しましょう")
+        st.text("💡気になる物件はお気に入り登録することでまとめて見返すことができます")
+
 
         username = st.sidebar.text_input("ユーザー名を入力してください")
         password = st.sidebar.text_input("パスワードを入力してください", type='password')
@@ -269,14 +271,14 @@ def main():
 
             result = login_user(username, check_hashes(password, hashed_pswd))
             if result:
-                st.success(f"{username}さんでログインしました")
+                st.success(f"{username}さん、ようこそ")
                 create_bookmark_table(username)
                 rental_app(username)
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
 
-    elif choice == "サインアップ":
-        st.subheader("新しいアカウントを作成します")
+    elif choice == "🆕サインアップ":
+        st.subheader("🆕新しいアカウントを作成します")
         new_user = st.text_input("ユーザー名を入力してください")
         new_password = st.text_input("パスワードを入力してください", type='password')
 
@@ -286,8 +288,8 @@ def main():
             st.success("アカウントの作成に成功しました")
             st.info("ログイン画面からログインしてください")
 
-    elif choice == "ブックマーク":
-        st.subheader("ブックマークされた物件情報")
+    elif choice == "📚ブックマーク":
+        st.subheader("📚ブックマークされた物件情報")
         username = st.sidebar.text_input("ユーザー名を入力してください")
         password = st.sidebar.text_input("パスワードを入力してください", type='password')
         if st.sidebar.checkbox("表示"):
