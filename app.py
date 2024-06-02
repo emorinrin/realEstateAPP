@@ -240,7 +240,7 @@ def rental_app(username):
             display_search_results(st.session_state.get('filtered_df2', filtered_df2), username)
 
 def main():
-    st.title("HomeSeekers -賃貸物件情報アプリ-")
+    st.title("HomeSeekers -賃貸検索アプリ-")
 
     menu = ["ホーム", "ログイン", "サインアップ", "ブックマーク"]
     choice = st.sidebar.selectbox("メニュー", menu)
@@ -287,7 +287,10 @@ def main():
                 if bookmarks:
                     df_bookmarks = pd.DataFrame(bookmarks, columns=["id", "名称", "アドレス", "階数", "家賃", "間取り", "物件詳細URL",'緯度',
                     '経度', '区'])
-                    st.dataframe(df_bookmarks)
+                    # 重複データの削除
+                    df_bookmarks = df_bookmarks.drop_duplicates(subset=["物件詳細URL"])
+                    df_bookmarks = df_bookmarks.loc[:,["名称", "アドレス", "階数", "家賃", "間取り", "物件詳細URL"]]
+                    st.dataframe(df_bookmarks,hide_index=True)
                 else:
                     st.warning("ブックマークされた物件がありません")
             else:
