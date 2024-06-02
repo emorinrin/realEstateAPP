@@ -7,6 +7,15 @@ from geopy.geocoders import Nominatim
 import folium
 from streamlit_folium import folium_static
 
+#CSS
+st.set_page_config(
+    page_title="HomeSeeker",
+    page_icon="🏠",
+    layout="centered",
+    initial_sidebar_state="auto",
+)
+
+
 # データベース接続の設定
 DB_PATH = 'database.db'
 conn = sqlite3.connect(DB_PATH)
@@ -246,6 +255,7 @@ def main():
     choice = st.sidebar.selectbox("メニュー", menu)
 
     if choice == "ホーム":
+        st.image("img/HomeSeekers.png")
         st.subheader("ホーム画面です")
 
     elif choice == "ログイン":
