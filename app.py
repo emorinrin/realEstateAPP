@@ -301,8 +301,18 @@ def main():
                     '経度', '区'])
                     # 重複データの削除
                     df_bookmarks = df_bookmarks.drop_duplicates(subset=["物件詳細URL"])
+
+                    # 地図表示
+                    m = create_map(df_bookmarks)
+                    folium_static(m)
+
                     df_bookmarks = df_bookmarks.loc[:,["名称", "アドレス", "階数", "家賃", "間取り", "物件詳細URL"]]
-                    st.dataframe(df_bookmarks,hide_index=True)
+                    df_bookmarks['物件詳細URL'] = df_bookmarks['物件詳細URL'].apply(lambda x: make_clickable(x, "リンク"))
+                    df_bookmarks = df_bookmarks.rename(columns={'名称': '物件名','家賃':'家賃（万）'})
+                    display_columns = ['物件名', 'アドレス', '階数', '家賃（万）', '間取り', '物件詳細URL']
+                    filtered_df_display = df_bookmarks[display_columns]
+                    st.markdown(filtered_df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
+
                 else:
                     st.warning("ブックマークされた物件がありません")
             else:
